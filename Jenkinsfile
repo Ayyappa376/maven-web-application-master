@@ -1,7 +1,7 @@
 node ('master')
  {
   
-  def mavenHome = tool name: "maven3.6.3"
+  def mavenHome = tool name: "maven"
   
       echo "GitHub BranhName ${env.BRANCH_NAME}"
       echo "Jenkins Job Number ${env.BUILD_NUMBER}"
@@ -12,43 +12,19 @@ node ('master')
       echo "JOB Name ${env.JOB_NAME}"
   
    //properties([[$class: 'JiraProjectProperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '2', daysToKeepStr: '', numToKeepStr: '2')), pipelineTriggers([pollSCM('* * * * *')])])
-  
-  stage("CheckOutCodeGit")
-  {
-   git branch: 'master', credentialsId: '65fb834f-a83b-4fe7-8e11-686245c47a65', url: 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
- }
- 
- stage("Build")
- {
- sh "${mavenHome}/bin/mvn clean package"
- }
- 
-  /*
- stage("ExecuteSonarQubeReport")
- {
- sh "${mavenHome}/bin/mvn sonar:sonar"
- }
- 
- stage("UploadArtifactsintoNexus")
- {
- sh "${mavenHome}/bin/mvn deploy"
- }
- 
-  stage("DeployAppTomcat")
- {
-  sshagent(['423b5b58-c0a3-42aa-af6e-f0affe1bad0c']) {
-    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war  ec2-user@15.206.91.239:/opt/apache-tomcat-9.0.34/webapps/" 
-  }
- }
- 
- stage('EmailNotification')
- {
- mail bcc: 'devopstrainingblr@gmail.com', body: '''Build is over
-
- Thanks,
- Mithun Technologies,
- 9980923226.''', cc: 'devopstrainingblr@gmail.com', from: '', replyTo: '', subject: 'Build is over!!', to: 'devopstrainingblr@gmail.com'
- }
- */
- 
- }
+      stage('checkout')
+      git credentialsId: '7731864b-7a59-4c2a-8e1a-d9cd809cda62', url: 'https://github.com/Ayyappa376/maven-web-application-master.git'
+    stage ('Build')
+      sh "${mavenHome}/bin/mvn clean package"
+    stage ('Code Quality Analysis')
+      sh "${mavenHome}/bin/mvn sonar:sonar"
+    stage ('upload to artifactory')
+      sh "${mavenHome}/bin/mvn deploy"   
+    stage ('Deploy to tomcat')
+    {
+   sshagent(['e76ed651-45a5-47d8-ae48-b8213e4015ab'])
+    {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@34.224.102.254:/opt/tomcat/apache-tomcat-9.0.53/webapps/"
+    }
+    }
+}
